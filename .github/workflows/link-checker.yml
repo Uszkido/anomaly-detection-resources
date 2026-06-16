@@ -1,0 +1,39 @@
+name: Link Checker
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run link checker
+        run: python .github/workflows/url_checker.py
+        continue-on-error: true
+
+      - name: Create issue if broken links found
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Broken links detected',
+              body: 'The weekly link checker found broken URLs. Check the Actions log for details.',
+              labels: ['broken-link']
+            })

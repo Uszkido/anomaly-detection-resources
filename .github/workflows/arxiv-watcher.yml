@@ -1,0 +1,28 @@
+name: arXiv Paper Watcher
+
+on:
+  schedule:
+    - cron: '0 9 * * 3'
+  workflow_dispatch:
+
+jobs:
+  fetch-papers:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch new arXiv papers
+        run: python .github/workflows/arxiv_watcher.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
